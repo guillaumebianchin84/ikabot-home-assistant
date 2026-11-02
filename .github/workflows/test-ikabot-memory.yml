@@ -1,0 +1,19 @@
+name: Mémoire Ikabot — tests unitaires
+on:
+  pull_request:
+    paths:
+      - 'pyscript/ikabot_auto_memory.py'
+      - 'tests/test_ikabot_auto_memory.py'
+      - '.github/workflows/test-ikabot-memory.yml'
+  workflow_dispatch:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m compileall -q pyscript/ikabot_auto_memory.py
+      - run: python -m unittest discover -s tests -v
