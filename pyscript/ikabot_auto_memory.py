@@ -133,7 +133,7 @@ async def _analyse(question, answer):
     response = _field(_field(_field(result, "response"), "speech"), "plain")
     raw = str(_field(response, "speech", "") or "").strip()
     if raw.startswith("```"):
-        raw = re.sub(r"^\`\`\`(?:json)?\s*|\s*\`\`\`$", "", raw).strip()
+        raw = re.sub(r"^`{3}(?:json)?\s*|\s*`{3}$", "", raw).strip()
     return _safe_candidate(json.loads(raw))
 
 async def _save(candidate):
@@ -162,17 +162,23 @@ async def ikabot_auto_memory_poll():
             _initialized = True
             _report(mode, "ready")
             return
-        fresh = [(rid, ev) for rid, ev in runs if rid not in _seen]
-        _seen.update(run_ids)
-        # Garder seulement les IDs encore présents pour éviter l'accumulation.
+        # Attendre impérativement "run-end" : une exécution incomplète
+        # ne doit pas être marquée comme traitée.
+        completed = [
+            (rid, ev) for rid, ev in runs
+            if rid not in _seen and any(_event_type(item) == "run-end" for item in ev)
+        ]
+        # Garder uniquement les identifiants encore présents dans HA.
         _seen.intersection_update(run_ids)
         if mode not in ("observe", "auto"):
+            _seen.update(rid for rid, _ in completed)
             _report(mode, "off")
             return
         if PRIMARY_AGENT.startswith("conversation.REMPLACER"):
             _report(mode, "configuration_required")
             return
-        for run_id, events in fresh[:5]:
+        for run_id, events in completed[:5]:
+            _seen.add(run_id)
             entry = _extract(events)
             if entry is None or entry["engine"] != PRIMARY_AGENT:
                 continue
