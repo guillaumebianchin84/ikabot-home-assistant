@@ -33,14 +33,16 @@
 4. Créer un helper **Liste déroulante** (input_select) avec identifiant
    `input_select.ikabot_memoire_mode` et options **exactes** :
    `off`, `observe`, `auto`, et choix initial **off**.
-5. Relever l'identifiant de l'agent principal dans le diagnostic Assist,
-   puis renseigner `PRIMARY_AGENT` en haut du fichier. Ne pas confondre
-   l'agent principal avec l'agent de recherche Internet.
-6. Recharger Pyscript. L'entité `sensor.ikabot_memoire_auto` indiquera
+5. Recharger Pyscript. L'entité `sensor.ikabot_memoire_auto` indiquera
    `ready` puis `off`.
-7. Passer le helper à `observe` et envoyer depuis Assist **en mode texte**
-   une phrase de test non sensible. Contrôler les attributs
-   `last_question` / `last_answer` de ce sensor.
+6. Passer le helper à `observe` et envoyer depuis Assist **en mode texte**
+   une phrase de test fictive. Contrôler les attributs
+   `last_question`, `last_answer` et `last_engine` de ce sensor.
+   Dans ce mode, l'agent exact est détecté automatiquement ; il n'est pas
+   nécessaire de modifier le code.
+7. Après le test, **revenir à `off`**, puis renseigner `PRIMARY_AGENT`
+   avec la valeur de `last_engine` obtenue pour Ikabot (exemple :
+   `conversation.ikabot`). Cette valeur est obligatoire avant le mode `auto`.
 8. Répéter plus tard par la voix. Vérifier notamment l'association correcte
    entre question et réponse quand plusieurs commandes se suivent.
 
@@ -80,6 +82,8 @@ Gemini de ce deuxième agent, ce qui peut engendrer une facturation.
 
 - Aucune conversation n'est poussée sur GitHub.
 - La V1 ne crée **aucun fichier contenant les transcriptions**.
+- En observation, tout agent Assist peut être détecté tant que `PRIMARY_AGENT`
+  est vide ; faire uniquement des essais fictifs et repasser à `off` après.
 - En observation, la dernière question et la dernière réponse figurent dans
   les **attributs du capteur** ; Home Assistant Recorder peut les historiser.
   N'utiliser que des phrases fictives et exclure ce capteur de Recorder si
