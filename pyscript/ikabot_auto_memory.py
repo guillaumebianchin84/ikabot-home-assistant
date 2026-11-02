@@ -16,7 +16,7 @@ from datetime import datetime
 MODE_ENTITY = "input_select.ikabot_memoire_mode"
 STATUS_ENTITY = "sensor.ikabot_memoire_auto"
 # À remplacer par le moteur conversation principal vu dans la trace Assist.
-PRIMARY_AGENT = "conversation.REMPLACER_PAR_AGENT_IKABOT"
+PRIMARY_AGENT = ""  # À remplir après le premier essai en observation
 # Agent Gemini séparé, sans outil, dédié uniquement à la sélection des souvenirs.
 ANALYZER_AGENT = "conversation.REMPLACER_PAR_AGENT_MEMOIRE"
 
@@ -174,13 +174,13 @@ async def ikabot_auto_memory_poll():
             _seen.update(rid for rid, _ in completed)
             _report(mode, "off")
             return
-        if PRIMARY_AGENT.startswith("conversation.REMPLACER"):
+        if mode == "auto" and not PRIMARY_AGENT:
             _report(mode, "configuration_required")
             return
         for run_id, events in completed[:5]:
             _seen.add(run_id)
             entry = _extract(events)
-            if entry is None or entry["engine"] != PRIMARY_AGENT:
+            if entry is None or (PRIMARY_AGENT and entry["engine"] != PRIMARY_AGENT):
                 continue
             # On ne mémorise pas les réponses techniques de commandes domestiques.
             if entry["answer"] == "OK_ACTION":
@@ -189,7 +189,8 @@ async def ikabot_auto_memory_poll():
             if mode == "observe":
                 _report(mode, "observed",
                     last_question=entry["question"][:600],
-                    last_answer=entry["answer"][:600])
+                    last_answer=entry["answer"][:600],
+                    last_engine=entry["engine"])
                 continue
             if ANALYZER_AGENT.startswith("conversation.REMPLACER"):
                 _report(mode, "analyzer_required")
